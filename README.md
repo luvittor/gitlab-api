@@ -1,6 +1,6 @@
 # GitLab Branch Creation Script
 
-This script automates the creation of branches in multiple GitLab projects using the GitLab API.
+This repository contains scripts to automate the creation (and optional deletion) of branches in multiple GitLab projects using the GitLab API.
 
 ## Prerequisites
 
@@ -56,9 +56,8 @@ sudo apt-get install -y bash curl jq python3
    - Replace `YOUR_PRIVATE_TOKEN` with your actual GitLab personal access token.
    - **Do not share this token or commit the `.env` file to version control.**
 
-5. **Set Up the `branches.txt` File**
-
-   The script uses a `branches.txt` file to know which projects and branches to work with.
+5. **(Optional) Prepare a `branches.txt` File**  
+   The `create_branches.sh` script uses a `branches.txt` file to know which branches to create.
 
    1. **Copy the example file:**
 
@@ -66,18 +65,14 @@ sudo apt-get install -y bash curl jq python3
       cp branches.txt.example branches.txt
       ```
 
-   2. **Edit the `branches.txt` file:**
+   2. **Edit the `branches.txt` file:**  
+      Each line should follow this format:
 
-      Open `branches.txt` in a text editor and update it with the actual project URLs and destination branches you wish to create.
+      ```
+      https://gitlab.example.com/group/project/tree/destination-branch
+      ```
 
-      - Each line in the file should follow this format:
-
-        ```
-        https://gitlab.example.com/group/project/tree/destination-branch
-        ```
-
-      - Replace `https://gitlab.example.com/group/project` with the actual URL of your GitLab project.
-      - Replace `destination-branch` with the name of the branch you want to create.
+      Replace `group/project` and `destination-branch` with your actual GitLab path and branch name.
 
       **Example `branches.txt` content:**
 
@@ -96,6 +91,8 @@ sudo apt-get install -y bash curl jq python3
 
 ## Usage
 
+### `create_branches.sh`
+
 1. **Make the script executable:**
 
    ```sh
@@ -108,22 +105,84 @@ sudo apt-get install -y bash curl jq python3
    ./create_branches.sh
    ```
 
-   - The script will read the `.env` and `branches.txt` files and process each entry, creating the specified branches in your GitLab projects.
+   - The script will read the `.env` and `branches.txt` files, then create the specified branches in your GitLab projects.
+   - It assumes the source branch is `master`. If you need a different source branch, adjust the script accordingly.
+
+### `batch_branches.sh`
+
+`batch_branches.sh` is designed for **creating and deleting branches** based on a task file. Each line in this task file should specify either `NEW` or `DEL`, along with the required URLs.
+
+1. **Make the script executable:**
+
+   ```sh
+   chmod +x batch_branches.sh
+   ```
+
+2. **Prepare a Tasks File** (e.g., `backup_master.txt.example` or `recreate_develop.txt.example`):  
+   - **Format for creating a new branch**:
+     ```
+     NEW <SRC_URL> <DEST_URL>
+     ```
+     Where `<SRC_URL>` is the branch you want to copy from, and `<DEST_URL>` is the new branch you want to create.
+
+   - **Format for deleting a branch**:
+     ```
+     DEL <URL>
+     ```
+     Where `<URL>` is the branch you want to delete.
+
+   - **Special placeholder**:  
+     - You can use `{DATE}` in a URL. The script will replace `{DATE}` with the current date in `YYYYMMDD` format.
+
+   - **Example**:  
+     ```txt
+     NEW https://gitlab.example.com/group/project1/tree/master https://gitlab.example.com/group/project1/tree/master_bkp_{DATE}
+     DEL https://gitlab.example.com/group/project1/tree/develop
+     NEW https://gitlab.example.com/group/project1/tree/master https://gitlab.example.com/group/project1/tree/develop
+     ```
+   - **Blank lines** are ignored, and the script also handles the case where the file does not end with a newline (ensuring the last line is processed).
+
+3. **Run the script with your tasks file**:
+
+   ```sh
+   ./batch_branches.sh backup_master.txt
+   ```
+
+   - This will read each line of `backup_master.txt`, create or delete the branches accordingly, and replace `{DATE}` with the current date if present.
 
 ## Notes
 
-- Ensure your personal access token has the necessary permissions to create branches (`api` scope).
-- The script assumes that the source branch is `master`. Modify the script if you need a different source branch.
-- The `branches.txt` file should be kept secure as it contains project URLs.
-- Always verify the branch names and project URLs before running the script to avoid unintended changes.
+- Ensure your personal access token has the necessary permissions to create and delete branches (`api` scope).
+- The `branches.txt` or tasks file should be kept secure, as it contains project URLs.
+- Always verify the branch names and project URLs before running the scripts to avoid unintended changes.
+- If your branches are protected, you may need additional steps or permissions to create/delete them.
 
 ## File Descriptions
 
-- `create_branches.sh`: The main script that automates branch creation.
-- `.env.example`: Example environment file containing variable definitions.
-- `branches.txt.example`: Example branches file showing the required format.
-- `.gitignore`: Git configuration to ignore the `.env` and `branches.txt` files.
-- `README.md`: Instructions and information about the script.
+- **`create_branches.sh`**:  
+  The main script that automates **simple branch creation** based on `branches.txt.example`.
+
+- **`batch_branches.sh`**:  
+  A more advanced script that **creates and deletes** branches in multiple projects using a tasks file.  
+  - Accepts instructions in the form of `NEW <SRC_URL> <DEST_URL>` and `DEL <URL>`.
+
+- **`.env.example`**:  
+  Example environment file containing variable definitions (`GITLAB_URL` and `PRIVATE_TOKEN`).
+
+- **`branches.txt.example`**:  
+  Example file for `create_branches.sh` usage, showing how to list branches to create.
+
+- **`backup_master.txt.example`**:  
+  Example tasks file for `batch_branches.sh` to create backup of master branches.
+
+- **`recreate_develop.txt.example`**:  
+  Example tasks file for `batch_branches.sh` to backup and recreate develop branches based on master.
+
+- **`.gitignore`**:  
+  Git configuration to ignore the `.env` and `*.txt` files (keeping sensitive info out of version control).
+
+- **`README.md`**:  
+  This document, containing setup and usage instructions for the scripts.
 
 ## Support
 

@@ -1,10 +1,4 @@
-# .gitignore
-
-# Ignore environment files
 .env
-
-# Ignore any compiled scripts or logs (optional)
 *.log
-
-# Other files to ignore
-branches.txt
+*.txt
+private_notes.md

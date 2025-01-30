@@ -1,0 +1,3 @@
+NEW https://gitlab.example.com/group/project1/tree/develop https://gitlab.example.com/group/project1/tree/develop_bkp_{DATE}
+DEL https://gitlab.example.com/group/project1/tree/develop
+NEW https://gitlab.example.com/group/project1/tree/master https://gitlab.example.com/group/project1/tree/develop
