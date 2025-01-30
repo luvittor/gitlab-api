@@ -1,4 +1,3 @@
 .env
-*.log
 *.txt
 private_notes.md
